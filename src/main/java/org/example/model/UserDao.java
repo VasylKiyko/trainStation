@@ -1,51 +1,51 @@
 package org.example.model;
 
 
+import org.example.dao.ConnectionFactory;
+
 import java.sql.*;
 
 public class UserDao {
-    private static final String url = "jdbc:mysql://localhost:3306/train_station?useUnicode=true&serverTimezone=UTC";
-    private static final String USER = "root";
-    private static final String password = "1111";
-    static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
+    private PreparedStatement prepStatement;
+    private ResultSet resSet;
+    private Connection connection;
 
-    private PreparedStatement stmt;
-    private ResultSet rs;
-    private Connection con;
-
-    public User getUser(int id) throws SQLException {
-        String sqlString = "SELECT * FROM users WHERE userID=(?);";
+    public User checkUser(String login, String password){
+        String sqlString = "SELECT * FROM users WHERE userLogin=(?)";
         User user = null;
+
         try{
-            Class.forName(JDBC_DRIVER);
-            System.out.println("Creating database connection...");
-            con = DriverManager.getConnection(url, USER, password);
-            stmt = con.prepareStatement(sqlString);
+            connection = ConnectionFactory.getConnection();
+            prepStatement = connection.prepareStatement(sqlString);
+            prepStatement.setString(1, login);
+            resSet = prepStatement.executeQuery();
 
-            stmt.setString(1, Integer.toString(id));
-
-            rs = stmt.executeQuery();
-
-
-            if(rs.next()){
-                user = new User(Integer.parseInt(rs.getString("userID")),
-                        rs.getString("userName"), rs.getString("userSurname"),
-                        rs.getString("userRole"), rs.getString("userLogin"),
-                        rs.getString("userPassword"));
+            if(resSet.getString("userPassword").equals(password)){
+                user = new User(Integer.parseInt(resSet.getString("userID")),
+                        resSet.getString("userSurname"), resSet.getString("userName"),
+                        resSet.getString("userLogin"), resSet.getString("userPassword"),
+                        resSet.getString("userRole"));
+            } else {
+                throw new UserNotFoundException("Wrong login or password");
             }
-
-        } catch (Exception e){
-            System.out.println(e);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error during check user", e);
         } finally {
-            rs.close();
-            stmt.close();
-            con.close();
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+                if (prepStatement != null) {
+                    prepStatement.close();
+                }
+                if (resSet != null) {
+                    resSet.close();
+                }
+            } catch (SQLException e) {
+                System.out.println(e);
+            }
         }
 
         return user;
     }
-
-    public void addUser(User user){}
-
-
 }

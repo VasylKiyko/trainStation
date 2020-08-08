@@ -18,4 +18,9 @@ public class BusinessLogic implements Model {
     public List<Route> getAllRoutes() {
         return domain.getAllRoutes();
     }
+
+    @Override
+    public User checkUser(String login, String password) {
+        return null;
+    }
 }

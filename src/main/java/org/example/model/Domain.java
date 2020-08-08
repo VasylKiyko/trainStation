@@ -29,4 +29,9 @@ public class Domain {
         }
         return routesList;
     }
+
+    public User checkUser(String login, String password) {
+        return null;
+    }
+
 }
